@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "test": "jest",
-    "start": "ts-node src/index.ts"
+    "clean": "rm -rf build",
+    "build-tsc": "tsc",
+    "build": "npm run clean && npm run build-tsc",
+    "start": "node build/index.js"
   },
   "keywords": [],
   "author": "",
