@@ -1,0 +1,43 @@
+{
+  "object": "page",
+  "entry": [
+    {
+      "id": "109820451946078",
+      "time": 1668734311968,
+      "messaging": [
+        {
+          "sender": {
+            "id": "5852030734853519"
+          },
+          "recipient": {
+            "id": "109820451946078"
+          },
+          "timestamp": 1668734311551,
+          "message": {
+            "mid": "m_lygKm6TddWh061uatUwZR4hI0y_pQ1IVrmFo8xHKR8FjhlQCQ8ZibjPrrOt8npOieL4XAwhntF9imIf8yu7LFw",
+            "text": "Can someone assist me?",
+            "nlp": {
+              "intents": [],
+              "entities": {},
+              "traits": {
+                "wit$sentiment": [
+                  {
+                    "id": "5ac2b50a-44e4-466e-9d49-bad6bd40092c",
+                    "value": "neutral",
+                    "confidence": 0.8447
+                  }
+                ]
+              },
+              "detected_locales": [
+                {
+                  "locale": "en_XX",
+                  "confidence": 1
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
