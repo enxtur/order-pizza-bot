@@ -9,23 +9,24 @@ export const messageHook = Router();
 
 messageHook.post('/', (req, res) => {
   const body = req.body as WebhookBody;
-  logger.info({ message: 'Received webhook', body });
+  // logger.info({ message: 'Received webhook', body });
   if (body.object !== 'page') {
     return res.sendStatus(404);
   }
   body.entry.forEach(entry => {
     const webhookEvent = entry.messaging[0];
     const senderId = webhookEvent.sender.id;
+    const recipientId = webhookEvent.recipient.id;
     if (webhookEvent.message) {
-      handleMessage(senderId, webhookEvent.message);
+      handleMessage(senderId, recipientId, webhookEvent.message);
     } else if (webhookEvent.postback) {
-      handlePostback(senderId, webhookEvent.postback);
+      handlePostback(senderId, recipientId, webhookEvent.postback);
     }
   });
   res.status(200).send('EVENT_RECEIVED');
 });
 
-function handleMessage(senderId: string, message: Message) {
+function handleMessage(senderId: string, recipientId:string, message: Message) {
   let response: Response = {}
   if (message.text) {
     response.text = `You sent the message: "${message.text}". Now send me an image!`;
@@ -52,18 +53,20 @@ function handleMessage(senderId: string, message: Message) {
       },
     }
   }
-  callSendAPI(senderId, response);
+  callSendAPI(senderId, recipientId, response);
 }
 
-function handlePostback(senderId: string, postback: Postback) {
-  // console.log('handlePostback called', postback);
+function handlePostback(senderId: string, recipientId: string, postback: Postback) {
+  console.log('handlePostback called', senderId, recipientId, postback);
   if (postback.payload === 'yes') {
     let response: Response = {
       attachment: {
         type: ResponseAttachmentType.template,
         payload: {
           template_type: TemplateType.customer_feedback,
-          title: "Rate your experience",
+          title: "Rate your experience with our bot",
+          subtitle: "Let the original provider know how you feel",
+          button_title: "Rate Experience",
           feedback_screens: [{
             questions: [{
               id: uuid(),
@@ -74,19 +77,22 @@ function handlePostback(senderId: string, postback: Postback) {
             }],
           }],
           business_privacy: {
-            url: "https://www.example.com/privacy"
+            url: "https://order-pizza-kfc.herokuapp.com/privacy.html"
           }
         }
       }
     }
-    callSendAPI(senderId, response);
+    callSendAPI(senderId, recipientId, response);
   }
 }
 
-function callSendAPI(senderId: string, response: Response) {
+function callSendAPI(senderId: string, recipientId: string, response: Response) {
   const requestBody = {
     recipient: {
       id: senderId,
+    },
+    sender: {
+      id: recipientId,
     },
     message: response,
   }
@@ -96,8 +102,12 @@ function callSendAPI(senderId: string, response: Response) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify(requestBody),
-  }).then(()=> {
-    logger.info({ message: 'Successfully sent message', response });
+  }).then(async (res)=> {
+    if (res.status === 200) {
+      logger.info({ message: 'Successfully sent message', response: await res.json() });
+    } else {
+      logger.error({ message: 'Error sending message', status: res.status, body: await res.json() });
+    }
   }).catch((err) => {
     logger.error({ message: 'Failed to send message', err });
   })
