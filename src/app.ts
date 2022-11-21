@@ -17,3 +17,4 @@ app.use(bodyParser.json({ verify: verifyRequestSignature }));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use('/api', routes);
 app.use('/webhook', webhooks);
+app.use(express.static(__dirname + '/../static'));

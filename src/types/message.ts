@@ -16,7 +16,9 @@ export interface Message {
   attachments?: Attachment[];
 }
 export interface Postback {
-
+  title: string;
+  payload: string;
+  mid: string;
 }
 interface Messaging {
   sender: {

@@ -2,7 +2,8 @@ import { Router } from "express";
 import { logger } from "../logger";
 import { Message, Postback, WebhookBody } from "../types/message";
 import fetch from "node-fetch";
-import { ButtonType, Response, ResponseAttachmentType, TemplateType } from "../types/response";
+import { ButtonType, FeedbackQuestionType, Response, ResponseAttachmentType, TemplateType } from "../types/response";
+import { v4 as uuid } from 'uuid';
 
 export const messageHook = Router();
 
@@ -55,7 +56,31 @@ function handleMessage(senderId: string, message: Message) {
 }
 
 function handlePostback(senderId: string, postback: Postback) {
-  console.log('handlePostback called', postback);
+  // console.log('handlePostback called', postback);
+  if (postback.payload === 'yes') {
+    let response: Response = {
+      attachment: {
+        type: ResponseAttachmentType.template,
+        payload: {
+          template_type: TemplateType.customer_feedback,
+          title: "Rate your experience",
+          feedback_screens: [{
+            questions: [{
+              id: uuid(),
+              type: FeedbackQuestionType.csat,
+              title: "How likely are you to recommend us to a friend?",
+              score_label: "neg_pos",
+              score_option: "five_stars",
+            }],
+          }],
+          business_privacy: {
+            url: "https://www.example.com/privacy"
+          }
+        }
+      }
+    }
+    callSendAPI(senderId, response);
+  }
 }
 
 function callSendAPI(senderId: string, response: Response) {

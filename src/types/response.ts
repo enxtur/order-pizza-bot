@@ -30,11 +30,39 @@ interface Element {
   buttons?: Button[];
 }
 
+export enum FeedbackQuestionType {
+  csat = 'csat',
+  nps = 'nps',
+  ces = 'ces',
+}
+
+interface FeedbackQuestion {
+  id: string;
+  type: FeedbackQuestionType;
+  title?: string;
+  score_label?: string;
+  score_option?: string;
+  follow_up?: {
+    type: string;
+    placeholder: string;
+  }
+}
+
+interface FeedbackSreens {
+  questions: FeedbackQuestion[];
+}
+
 interface Attachment {
   type: ResponseAttachmentType;
   payload: {
     template_type: TemplateType;
     elements?: Element[];
+    title?: string;
+    subtitle?: string;
+    button_title?: string;
+    feedback_screens?: FeedbackSreens[];
+    business_privacy?: {url: string};
+    expires_in_days?: number;
   }
 }
 
