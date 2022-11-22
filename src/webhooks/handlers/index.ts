@@ -1,1 +1,1 @@
-export * from './getstarted';
+export * from './pizza';

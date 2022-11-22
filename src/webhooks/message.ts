@@ -1,9 +1,9 @@
 import { Router } from "express";
-import { logger } from "../logger";
-import { Message, Postback, WebhookBody } from "../types/message";
-import fetch from "node-fetch";
-import { ButtonType, FeedbackQuestionType, Response, ResponseAttachmentType, TemplateType } from "../types/response";
 import { v4 as uuid } from 'uuid';
+import { callSendAPI } from "../helpers/message";
+import { Message, Postback, WebhookBody } from "../types/message";
+import { ButtonType, FeedbackQuestionType, Response, ResponseAttachmentType, TemplateType } from "../types/response";
+import { pizza } from "./handlers";
 
 export const messageHook = Router();
 
@@ -29,7 +29,12 @@ messageHook.post('/', (req, res) => {
 function handleMessage(senderId: string, recipientId:string, message: Message) {
   let response: Response = {}
   if (message.text) {
-    response.text = `You sent the message: "${message.text}". Now send me an image!`;
+    if (message.text === 'pizza') {
+      pizza(senderId, recipientId);
+    } else {
+      response.text = `You sent the message: "${message.text}". Now send me an image!`;
+      callSendAPI(senderId, recipientId, response);
+    }
   } else if (message.attachments) {
     // message.attachments[0].payload.url;
     response.attachment = {
@@ -52,8 +57,8 @@ function handleMessage(senderId: string, recipientId:string, message: Message) {
         }],
       },
     }
+    callSendAPI(senderId, recipientId, response);
   }
-  callSendAPI(senderId, recipientId, response);
 }
 
 function handlePostback(senderId: string, recipientId: string, postback: Postback) {
@@ -83,32 +88,63 @@ function handlePostback(senderId: string, recipientId: string, postback: Postbac
       }
     }
     callSendAPI(senderId, recipientId, response);
-  }
-}
-
-function callSendAPI(senderId: string, recipientId: string, response: Response) {
-  const requestBody = {
-    recipient: {
-      id: senderId,
-    },
-    sender: {
-      id: recipientId,
-    },
-    message: response,
-  }
-  fetch(`https://graph.facebook.com/v2.6/me/messages?access_token=${process.env.PAGE_ACCESS_TOKEN}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-  }).then(async (res)=> {
-    if (res.status === 200) {
-      logger.info({ message: 'Successfully sent message', response: await res.json() });
-    } else {
-      logger.error({ message: 'Error sending message', status: res.status, body: await res.json() });
+  } else if (postback.payload === 'no') {
+    let response: Response = {
+      "attachment":{
+        "type": ResponseAttachmentType.template,
+        "payload":{
+          "template_type": TemplateType.receipt,
+          "recipient_name":"Stephane Crozatier",
+          "order_number":"12345678902",
+          "currency":"USD",
+          "payment_method":"Visa 2345",        
+          "order_url":"http://originalcoastclothing.com/order?order_id=123456",
+          "timestamp":"1428444852",         
+          "address":{
+            "street_1":"1 Hacker Way",
+            "street_2":"",
+            "city":"Menlo Park",
+            "postal_code":"94025",
+            "state":"CA",
+            "country":"US"
+          },
+          "summary":{
+            "subtotal":75.00,
+            "shipping_cost":4.95,
+            "total_tax":6.19,
+            "total_cost":56.14
+          },
+          "adjustments":[
+            {
+              "name":"New Customer Discount",
+              "amount":20
+            },
+            {
+              "name":"$10 Off Coupon",
+              "amount":10
+            }
+          ],
+          "elements":[
+            {
+              "title":"Classic White T-Shirt",
+              "subtitle":"100% Soft and Luxurious Cotton",
+              "quantity":2,
+              "price":50,
+              "currency":"USD",
+              "image_url":"http://originalcoastclothing.com/img/whiteshirt.png"
+            },
+            {
+              "title":"Classic Gray T-Shirt",
+              "subtitle":"100% Soft and Luxurious Cotton",
+              "quantity":1,
+              "price":25,
+              "currency":"USD",
+              "image_url":"http://originalcoastclothing.com/img/grayshirt.png"
+            }
+          ]
+        }
+      }
     }
-  }).catch((err) => {
-    logger.error({ message: 'Failed to send message', err });
-  })
+    callSendAPI(senderId, recipientId, response);
+  }
 }

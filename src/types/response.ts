@@ -22,12 +22,22 @@ interface Button {
   title: string;
   payload: string;
 }
+export enum MediaType {
+  image = 'image',
+  video = 'video',
+}
 
 interface Element {
-  title: string;
+  title?: string;
   subtitle?: string;
   image_url?: string;
   buttons?: Button[];
+  quantity?: number;
+  price?: number;
+  currency?: string;
+  media_type?: MediaType;
+  url?: string;
+  attachment_id?: string;
 }
 
 export enum FeedbackQuestionType {
@@ -63,6 +73,30 @@ interface Attachment {
     feedback_screens?: FeedbackSreens[];
     business_privacy?: {url: string};
     expires_in_days?: number;
+    recipient_name?: string;
+    order_number?: string;
+    currency?: string;
+    payment_method?: string;
+    order_url?: string;
+    timestamp?: string;
+    address?: {
+      street_1: string;
+      street_2?: string;
+      city: string;
+      postal_code: string;
+      state: string;
+      country: string;
+    };
+    summary?: {
+      subtotal: number;
+      shipping_cost: number;
+      total_tax: number;
+      total_cost: number;
+    },
+    adjustments?: {
+      name: string;
+      amount: number;
+    }[],
   }
 }
 
